@@ -6,7 +6,7 @@
 
 # GRIT 
 
-<span style="font-size:50em;">**G**ravitational **R**igid-body **I**n**T**egrators. Simulate spin and more.<span>
+<span style="font-size:50em;">**G**ravitational **R**igid-body **I**n**T**egrators, for simulating the coupled dynamics of both spin and orbit.<span>
 
 ## Introduction
 
