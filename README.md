@@ -157,7 +157,7 @@ system_dir
 
 ## License
 
-Copyright @ 2021, [Renyi Chen, Gongjie Li, Molei Tao].
+Copyright © 2021, [Renyi Chen, Gongjie Li, Molei Tao].
 Released under the [Apache-2.0 License](LICENSE).
 
 ## References
