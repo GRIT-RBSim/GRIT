@@ -83,7 +83,7 @@ system_dir
     * ``scheme``: ``T2``/``T4``/``T6``/``M42``(default)/``M642``/``K2``
         + ``T2``, ``T4``, ``T6`` are methods of 2nd, 4th and 6th order respectively using classical splitting.
         + ``M42``, ``M642`` are multiscale methods of order (4, 2), (6,4,2) respectively using tailored splitting.
-        + ``K2`` is an order (-, 2) method based on the Touma-Wisdom (1994) and Wisdom-Holman (1991) algorithms.
+        + ``K2`` is an order (-, 2) method and it is based on the Wisdom-Holman (1991) algorithms algorithm to integrate orbital evolution. This is similar to the method of Touma-Wisdom (1994).
     * ``tide``: ``true``/``false``
     * ``GR``: ``true``/``false``
     * ``coordinates``: ``central``/``Jacobi``
