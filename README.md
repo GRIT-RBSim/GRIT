@@ -34,7 +34,7 @@ Following steps here to compile
 ```sh
 ./simulate dir 
 ```
-* Try ``./bin/simulate sample/solar_system`` in the **root directory** to run a short time simulation for the solar system.
+* Try ``./bin/simulate sample/solar_system`` in the **base directory** of the repository tree to run a short time simulation for the solar system.
 
 ## Data
 
