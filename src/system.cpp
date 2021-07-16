@@ -145,7 +145,7 @@ void System::InitSystem(const json &j) {
     }
   }
 
-  external_force = parameters.tide && parameters.GR;
+  external_force = parameters.tide || parameters.GR;
 
   PrintSystemSummary();
 
