@@ -111,7 +111,11 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
   ld n_norm = n.Norm();
 
   ld epsilon = v_norm * v_norm / 2.0 - mu / r_norm;
+
+  // semi-major axis `a`
   ld a = -mu / 2.0 / epsilon;
+
+  // eccentricity `e`
   ld val = 1.0 + 2.0 * epsilon * h_norm * h_norm / mu / mu;
   if (val < 0)
     val = 0;
@@ -119,6 +123,7 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
   Vec3<ld> vec_e =
       r * (v_norm * v_norm / mu - 1.0 / r_norm) - v * ((r.DotProduct(v)) / mu);
 
+  // inclination `i`
   val = h.GetElement<3>() / h_norm;
   ld i;
   if (val >= -ld(1.0) && val <= ld(1.0))
@@ -130,31 +135,52 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
       i = kPI;
   }
 
+  // longitude of acending node `Omega`
+  // i=0: Omega=0
+  // i!=0: nondegenerate case
   val = n.GetElement<1>() / n_norm;
   ld Omega;
-  if (val > -ld(1.0) && val < ld(1.0))
+  if (abs(i) < kEps) {
+    Omega = 0;
+  } else {
+    if (val > -ld(1.0) && val < ld(1.0))
     Omega = acos(val);
-  else {
-    if (val > ld(0.0))
-      Omega = ld(0.0);
-    else
-      Omega = kPI;
+    else {
+      if (val > ld(0.0))
+        Omega = ld(0.0);
+      else
+        Omega = kPI;
+    }
   }
   if (n.GetElement(2) < 0)
-    Omega = 2 * kPI - Omega;
+  Omega = 2 * kPI - Omega;
 
-  val = n.DotProduct(vec_e) / n_norm / e;
+  // argument of periapsis `omega`
+  // e=0: omega=0
+  // e!=0:
+  //    i=0: angle between e_vec and kI
+  //    i!=0: nondegenerate case
   ld omega;
-  if (val > -ld(1.0) && val < ld(1.0))
-    omega = acos(val);
-  else {
-    if (val > ld(0.0))
-      omega = ld(0.0);
-    else
-      omega = kPI;
+  if (abs(e) < kEps) {
+    omega = 0;
+  } else {
+    if (abs(i) < kEps) {
+        omega = atan2(vec_e[1], vec_e[0]);
+      if (omega < 0) omega += k2PI;
+    } else {
+      val = n.DotProduct(vec_e) / n_norm / e;
+      if (val > -ld(1.0) && val < ld(1.0))
+        omega = acos(val);
+      else {
+        if (val > ld(0.0))
+        omega = ld(0.0);
+      else
+        omega = kPI;
+      }
+    }
   }
   if (vec_e.GetElement(3) < 0)
-    omega = 2 * kPI - omega;
+  omega = 2 * kPI - omega;
 
   val = vec_e.DotProduct(r) / e / r_norm;
   ld true_anomaly;
@@ -189,11 +215,11 @@ void OrbElements2PosVel(const std::vector<ld> &orbs, ld T, Vec3<ld> &pos,
   ld i = orbs.at(2);
   ld Omega = orbs.at(3);
   ld omega = orbs.at(4);
-  ld M = orbs.at(5);
+  ld mean_anomaly = orbs.at(5);
 
   ld n = ld(2.0) * kPI / T;
 
-  ld E = SlvKeplerEq(M, e);
+  ld E = MeanAnomaly2EccentricAnomaly(mean_anomaly, e);
   ld r = a * (ld(1.0) - e * cos(E));
   ld V = atan(sqrt((ld(1.0) + e) / (ld(1.0) - e)) * tan(E / ld(2.0))) * ld(2.0);
 
