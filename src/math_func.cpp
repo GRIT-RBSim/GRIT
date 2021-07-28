@@ -111,7 +111,11 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
   ld n_norm = n.Norm();
 
   ld epsilon = v_norm * v_norm / 2.0 - mu / r_norm;
+
+  // semi-major axis `a`
   ld a = -mu / 2.0 / epsilon;
+
+  // eccentricity `e`
   ld val = 1.0 + 2.0 * epsilon * h_norm * h_norm / mu / mu;
   if (val < 0)
     val = 0;
@@ -119,6 +123,7 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
   Vec3<ld> vec_e =
       r * (v_norm * v_norm / mu - 1.0 / r_norm) - v * ((r.DotProduct(v)) / mu);
 
+  // inclination `i`
   val = h.GetElement<3>() / h_norm;
   ld i;
   if (val >= -ld(1.0) && val <= ld(1.0))
@@ -130,31 +135,53 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
       i = kPI;
   }
 
+  // longitude of acending node `Omega`
+  // i=0: Omega=0
+  // i!=0: nondegenerate case
   val = n.GetElement<1>() / n_norm;
   ld Omega;
-  if (val > -ld(1.0) && val < ld(1.0))
-    Omega = acos(val);
-  else {
-    if (val > ld(0.0))
-      Omega = ld(0.0);
-    else
-      Omega = kPI;
+  if (abs(i) < kEps) {
+    Omega = 0;
+  } else {
+    if (val > -ld(1.0) && val < ld(1.0))
+      Omega = acos(val);
+    else {
+      if (val > ld(0.0))
+        Omega = ld(0.0);
+      else
+        Omega = kPI;
+    }
+    if (n.GetElement(2) < 0)
+      Omega = 2 * kPI - Omega;
   }
-  if (n.GetElement(2) < 0)
-    Omega = 2 * kPI - Omega;
 
-  val = n.DotProduct(vec_e) / n_norm / e;
+  // argument of periapsis `omega`
+  // e=0: omega=0
+  // e!=0:
+  //    i=0: angle between e_vec and kI
+  //    i!=0: nondegenerate case
   ld omega;
-  if (val > -ld(1.0) && val < ld(1.0))
-    omega = acos(val);
-  else {
-    if (val > ld(0.0))
-      omega = ld(0.0);
-    else
-      omega = kPI;
+  if (abs(e) < kEps) {
+    omega = 0;
+  } else {
+    if (abs(i) < kEps) {
+      omega = atan2(vec_e[1], vec_e[0]);
+      if (omega < 0)
+        omega += k2PI;
+    } else {
+      val = n.DotProduct(vec_e) / n_norm / e;
+      if (val > -ld(1.0) && val < ld(1.0))
+        omega = acos(val);
+      else {
+        if (val > ld(0.0))
+          omega = ld(0.0);
+        else
+          omega = kPI;
+      }
+      if (vec_e.GetElement(3) < 0)
+        omega = 2 * kPI - omega;
+    }
   }
-  if (vec_e.GetElement(3) < 0)
-    omega = 2 * kPI - omega;
 
   val = vec_e.DotProduct(r) / e / r_norm;
   ld true_anomaly;
@@ -189,11 +216,11 @@ void OrbElements2PosVel(const std::vector<ld> &orbs, ld T, Vec3<ld> &pos,
   ld i = orbs.at(2);
   ld Omega = orbs.at(3);
   ld omega = orbs.at(4);
-  ld M = orbs.at(5);
+  ld mean_anomaly = orbs.at(5);
 
   ld n = ld(2.0) * kPI / T;
 
-  ld E = SlvKeplerEq(M, e);
+  ld E = MeanAnomaly2EccentricAnomaly(mean_anomaly, e);
   ld r = a * (ld(1.0) - e * cos(E));
   ld V = atan(sqrt((ld(1.0) + e) / (ld(1.0) - e)) * tan(E / ld(2.0))) * ld(2.0);
 
@@ -212,7 +239,7 @@ void OrbElements2PosVel(const std::vector<ld> &orbs, ld T, Vec3<ld> &pos,
 }
 
 ld TrueAnomaly2MeanAnomaly(ld nu, ld e) {
-  ld E = TrueAnomaly2EccentricAnomaly(nu, e); 
+  ld E = TrueAnomaly2EccentricAnomaly(nu, e);
   ld M = EccentricAnomaly2MeanAnomaly(E, e);
   return M;
 }
@@ -272,7 +299,6 @@ void RotMat2EulerAngles(Matrix<ld> R, ld &phi, ld &theta, ld &psi) {
       phi = psi + atan2(h, -e);
     }
   }
-
 }
 
 void RotMat2EulerAngles(Matrix<ld> R, Vec3<ld> &euler_angle) {
@@ -290,137 +316,139 @@ void EulerAngles2RotMat(Matrix<ld> &R, const Vec3<ld> &euler_angle) {
                      euler_angle.GetElement(3));
 }
 
-void KeplerSlvDanby(ld dt, ld mu, Vec3<ld>& p, Vec3<ld>& v) {
+void KeplerSlvDanby(ld dt, ld mu, Vec3<ld> &p, Vec3<ld> &v) {
 
-    ld r_norm = p.Norm();
-    ld v_norm_sqr = v.NormSquared();
-    ld u = p.DotProduct(v);
-    ld alpha = 2.0 * mu / r_norm - v_norm_sqr;
+  ld r_norm = p.Norm();
+  ld v_norm_sqr = v.NormSquared();
+  ld u = p.DotProduct(v);
+  ld alpha = 2.0 * mu / r_norm - v_norm_sqr;
 
-    // initial guess `s`
-    ld s = 0.0;
-    if (alpha > 0) {
-      if (dt / r_norm < 0.2) {
-        s = dt / r_norm - (dt * dt * u) / (2.0 * r_norm * r_norm * r_norm);
-      } else {
-        ld a = mu / alpha;
-        ld en = sqrt(mu / (a * a * a));
-        ld ec = 1.0 - r_norm / a;
-        ld es = u / (en * a * a);
-        ld e = sqrt(ec * ec + es * es);
-        ld y = en * dt - es;
-        ld sigma = 1.0;
-        if (es * cos(y) + ec * sin(y) < 0)
-          sigma = -1.0;
-        ld x = y + sigma * 0.85 * e;
-        s = x / sqrt(alpha);
-      }
+  // initial guess `s`
+  ld s = 0.0;
+  if (alpha > 0) {
+    if (dt / r_norm < 0.2) {
+      s = dt / r_norm - (dt * dt * u) / (2.0 * r_norm * r_norm * r_norm);
     } else {
-      ld div = (mu - alpha * r_norm) / 6.0;
-      ld a2 = 0.5 * u / div;
-      ld a1 = r_norm / div;
-      ld a0 = -dt / div;
+      ld a = mu / alpha;
+      ld en = sqrt(mu / (a * a * a));
+      ld ec = 1.0 - r_norm / a;
+      ld es = u / (en * a * a);
+      ld e = sqrt(ec * ec + es * es);
+      ld y = en * dt - es;
+      ld sigma = 1.0;
+      if (es * cos(y) + ec * sin(y) < 0)
+        sigma = -1.0;
+      ld x = y + sigma * 0.85 * e;
+      s = x / sqrt(alpha);
+    }
+  } else {
+    ld div = (mu - alpha * r_norm) / 6.0;
+    ld a2 = 0.5 * u / div;
+    ld a1 = r_norm / div;
+    ld a0 = -dt / div;
 
-      ld q = (a1 - a2 * a2 / 3.0) / 3.0;
-      ld r = (a1 * a2 - 3.0 * a0) / 6.0 - (a2 * 3.0) / 27.0;
-      ld tmp = q * q * q + r * r;
+    ld q = (a1 - a2 * a2 / 3.0) / 3.0;
+    ld r = (a1 * a2 - 3.0 * a0) / 6.0 - (a2 * 3.0) / 27.0;
+    ld tmp = q * q * q + r * r;
 
-      if (tmp > 0) {
-        ld sq = sqrt(tmp);
+    if (tmp > 0) {
+      ld sq = sqrt(tmp);
 
-        ld p1, p2;
-        if ((r + sq) < 0) {
-          p1 = -pow(-(r + sq), 1.0 / 3.0);
-        } else {
-          p1 = pow(r + sq, 1.0 / 3.0);
-        }
-        if ((r - sq) < 0) {
-          p2 = -pow(-(r - sq), 1.0 / 3.0);
-        } else {
-          p2 = pow(r - sq, 1.0 / 3.0);
-        }
-
-        s = p1 + p2 - a2 / 3.0;
+      ld p1, p2;
+      if ((r + sq) < 0) {
+        p1 = -pow(-(r + sq), 1.0 / 3.0);
+      } else {
+        p1 = pow(r + sq, 1.0 / 3.0);
       }
-    }
-    // drift using Laguerre's method
-    int n_max = 400;
-    ld ln = 5.0;
-    int iter = 0;
-    ld f, fp, fpp, c0, c1, c2, c3;
-    while (iter < n_max) {
-      ld x = s * s * alpha;
-      Stumpff(x, c0, c1, c2, c3);
-      c1 = c1 * s;
-      c2 = c2 * s * s;
-      c3 = c3 * s * s * s;
-      f = r_norm * c1 + u * c2 + mu * c3 - dt;
-      fp = r_norm * c0 + u * c1 + mu * c2;
-      fpp = (-40.0 * alpha + mu) * c1 + u * c0;
-      ld ds = -ln * f /
-              (fp + copysign(1.0, fp) *
-                        sqrt(std::abs((ln - 1.0) * (ln - 1.0) * fp * fp -
-                                      (ln - 1.0) * ln * f * fpp)));
-      s = s + ds;
-      ld fdt = f / dt;
-      if (std::abs(fdt) < kEps)
-        break;
-      iter++;
-    }
+      if ((r - sq) < 0) {
+        p2 = -pow(-(r - sq), 1.0 / 3.0);
+      } else {
+        p2 = pow(r - sq, 1.0 / 3.0);
+      }
 
-    f = 1.0 - (mu / r_norm) * c2;
-    ld g = dt - mu * c3;
-    ld fdot = -(mu / (fp * r_norm)) * c1;
-    ld gdot = 1.0 - (mu / fp) * c2;
+      s = p1 + p2 - a2 / 3.0;
+    }
+  }
+  // drift using Laguerre's method
+  int n_max = 400;
+  ld ln = 5.0;
+  int iter = 0;
+  ld f, fp, fpp, c0, c1, c2, c3;
+  while (iter < n_max) {
+    ld x = s * s * alpha;
+    Stumpff(x, c0, c1, c2, c3);
+    c1 = c1 * s;
+    c2 = c2 * s * s;
+    c3 = c3 * s * s * s;
+    f = r_norm * c1 + u * c2 + mu * c3 - dt;
+    fp = r_norm * c0 + u * c1 + mu * c2;
+    fpp = (-40.0 * alpha + mu) * c1 + u * c0;
+    ld ds = -ln * f /
+            (fp + copysign(1.0, fp) *
+                      sqrt(std::abs((ln - 1.0) * (ln - 1.0) * fp * fp -
+                                    (ln - 1.0) * ln * f * fpp)));
+    s = s + ds;
+    ld fdt = f / dt;
+    if (std::abs(fdt) < kEps)
+      break;
+    iter++;
+  }
 
-    auto p1 = p * f + v * g;
-    auto v1 = p * fdot + v * gdot;
-    p = p1;
-    v = v1;
+  f = 1.0 - (mu / r_norm) * c2;
+  ld g = dt - mu * c3;
+  ld fdot = -(mu / (fp * r_norm)) * c1;
+  ld gdot = 1.0 - (mu / fp) * c2;
+
+  auto p1 = p * f + v * g;
+  auto v1 = p * fdot + v * gdot;
+  p = p1;
+  v = v1;
 }
 
+void Stumpff(ld x, ld &c0, ld &c1, ld &c2, ld &c3) {
+  ld xm = 0.1;
+  int k = 0;
+  while (std::abs(x) > xm) {
+    x *= 0.25;
+    k++;
+  }
 
-void Stumpff(ld x, ld& c0, ld& c1, ld& c2, ld& c3) {
-    ld xm = 0.1;
-    int k = 0;
-    while (std::abs(x)>xm) { x*=0.25; k++; }
+  c2 = (1 -
+        x *
+            (1 -
+             x *
+                 (1 -
+                  x *
+                      (1 - x * (1 - x * (1 - x * (1.0 - x / 182.0)) / 132.0) /
+                               90.0) /
+                      56.0) /
+                 30.0) /
+            12.0) /
+       2.0;
 
-    c2 = (1 -
-          x *
-              (1 -
-               x *
-                   (1 -
-                    x *
-                        (1 - x * (1 - x * (1 - x * (1.0 - x / 182.0)) / 132.0) /
-                                 90.0) /
-                        56.0) /
-                   30.0) /
-              12.0) /
-         2.0;
+  c3 = (1 -
+        x *
+            (1 -
+             x *
+                 (1 -
+                  x *
+                      (1 - x * (1 - x * (1 - x * (1.0 - x / 210.0)) / 156.0) /
+                               110.0) /
+                      72.0) /
+                 42.0) /
+            20.0) /
+       6.0;
 
-    c3 = (1 -
-          x *
-              (1 -
-               x *
-                   (1 -
-                    x *
-                        (1 - x * (1 - x * (1 - x * (1.0 - x / 210.0)) / 156.0) /
-                                 110.0) /
-                        72.0) /
-                   42.0) /
-              20.0) /
-         6.0;
+  c1 = 1.0 - x * c3;
+  c0 = 1.0 - x * c2;
 
-    c1 = 1.0 - x * c3;
-    c0 = 1.0 - x * c2;
-
-    for (int i = 0; i < k; i++) {
-      c3 = (c2 + c0 * c3) * 0.25;
-      c2 = c1 * c1 * 0.5;
-      c1 = c0 * c1;
-      c0 = 2.0 * c0 * c0 - 1.0;
-      x = x * 4.0;
-    }
+  for (int i = 0; i < k; i++) {
+    c3 = (c2 + c0 * c3) * 0.25;
+    c2 = c1 * c1 * 0.5;
+    c1 = c0 * c1;
+    c0 = 2.0 * c0 * c0 - 1.0;
+    x = x * 4.0;
+  }
 }
 
 } // namespace rb_sim
