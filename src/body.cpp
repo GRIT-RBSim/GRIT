@@ -71,7 +71,7 @@ Body::Body(const json &j)
     } else {
       assert(false && "Body parameters: need inertia variables.");
     }
-    if (symmetric)
+    if (!symmetric)
       delta = 1 / I2 - 1 / I1;
     else
       delta = 0;
