@@ -1172,11 +1172,11 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                      3, 3);
 
       ld tmp = 0;
-      tmp += 15 / 8 / div7 *
+      tmp += 15.0 / 8 / div7 *
              (3 * rai2 * rai2 + 3 * rbi2 * rbi2 + 3 * rci2 * rci2 +
               2 * (rai2 * rbi2 + rai2 * rci2 + rbi2 * rci2)) /
              35;
-      tmp += 15 / 8 / div7 *
+      tmp += 15.0 / 8 / div7 *
              (3 * raj2 * raj2 + 3 * rbj2 * rbj2 + 3 * rcj2 * rcj2 +
               2 * (raj2 * rbj2 + raj2 * rcj2 + rbj2 * rcj2)) /
              35;
@@ -1188,7 +1188,7 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                      Matrix<ld>(std::vector<ld>{rai2 / 5, 0, 0, 0, rbi2 / 5, 0,
                                                 0, 0, rci2 / 5},
                                 3, 3);
-      tmp += 15 / 4 / div7 * tmp_mat.Trace();
+      tmp += 15.0 / 4 / div7 * tmp_mat.Trace();
       tmp_mat =
           (Ri *
            Matrix<ld>(std::vector<ld>{rai2 * (3 * rai2 + rbi2 + rci2), 0, 0, 0,
@@ -1197,9 +1197,9 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                       3, 3) *
            Ri.Transpose()) /
           35;
-      tmp -= 15 * 7 / 4 / div9 * (qi_qj.DotProduct(tmp_mat * (qi_qj)));
+      tmp -= 15.0 * 7 / 4 / div9 * (qi_qj.DotProduct(tmp_mat * (qi_qj)));
       ret +=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (15 / 2 / div7);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (15.0 / 2 / div7);
       tmp_mat =
           Rj *
           Matrix<ld>(std::vector<ld>{raj2 * (3 * raj2 + rbj2 + rcj2), 0, 0, 0,
@@ -1207,9 +1207,9 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                                      rcj2 * (raj2 + rbj2 + 3 * rcj2)},
                      3, 3) *
           Rj.Transpose() / 35;
-      tmp -= 15 * 7 / 4 / div9 * (qi_qj.DotProduct(tmp_mat * (qi_qj)));
+      tmp -= 15.0 * 7 / 4 / div9 * (qi_qj.DotProduct(tmp_mat * (qi_qj)));
       ret +=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (15 / 2 / div7);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (15.0 / 2 / div7);
 
       tmp_mat =
           (rai2 + rbi2 + rci2) / 5 * Rj *
@@ -1220,9 +1220,9 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
               Matrix<ld>(std::vector<ld>{rai2, 0, 0, 0, rbi2, 0, 0, 0, rci2}, 3,
                          3) /
               5 * Ri.Transpose();
-      tmp -= 15 * 7 / 4 / div9 * (qi_qj.DotProduct(tmp_mat * qi_qj));
+      tmp -= 15.0 * 7 / 4 / div9 * (qi_qj.DotProduct(tmp_mat * qi_qj));
       ret +=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (15 / 2 / div7);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (15.0 / 2 / div7);
 
       tmp_mat = Ri *
                 Matrix<ld>(std::vector<ld>{rai2 / 5, 0, 0, 0, rbi2 / 5, 0, 0, 0,
@@ -1243,7 +1243,7 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                                            rci2 * rci2 * 3 / 35},
                            3, 3) *
                 Ri.Transpose() * qi_qj2;
-      tmp += 35 * 9 / 8 / div11 * tmp_mat.Trace();
+      tmp += 35.0 * 9 / 8 / div11 * tmp_mat.Trace();
       tmp_mat = qi_qj2 * Ri *
                 Matrix<ld>(std::vector<ld>{rai2 * rai2 * 3 / 35, 0, 0, 0,
                                            rbi2 * rbi2 * 3 / 35, 0, 0, 0,
@@ -1251,7 +1251,7 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                            3, 3) *
                 Ri.Transpose();
       ret -=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (35 / 4 / div9);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (35.0 / 4 / div9);
       tmp_mat = Ri *
                 Matrix<ld>(std::vector<ld>{rai2 * rai2 * 3 / 35, 0, 0, 0,
                                            rbi2 * rbi2 * 3 / 35, 0, 0, 0,
@@ -1259,7 +1259,7 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                            3, 3) *
                 Ri.Transpose() * qi_qj2;
       ret -=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (35 / 4 / div9);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (35.0 / 4 / div9);
 
       tmp_mat = qi_qj2 * Rj *
                 Matrix<ld>(std::vector<ld>{raj2 * raj2 * 3 / 35, 0, 0, 0,
@@ -1267,7 +1267,7 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                                            rcj2 * rcj2 * 3 / 35},
                            3, 3) *
                 Rj.Transpose() * qi_qj2;
-      tmp += 35 * 9 / 8 / div11 * tmp_mat.Trace();
+      tmp += 35.0 * 9 / 8 / div11 * tmp_mat.Trace();
       tmp_mat = qi_qj2 * Rj *
                 Matrix<ld>(std::vector<ld>{raj2 * raj2 * 3 / 35, 0, 0, 0,
                                            rbj2 * rbj2 * 3 / 35, 0, 0, 0,
@@ -1275,7 +1275,7 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                            3, 3) *
                 Rj.Transpose();
       ret -=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (35 / 4 / div9);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (35.0 / 4 / div9);
       tmp_mat = Rj *
                 Matrix<ld>(std::vector<ld>{raj2 * raj2 * 3 / 35, 0, 0, 0,
                                            rbj2 * rbj2 * 3 / 35, 0, 0, 0,
@@ -1283,9 +1283,9 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                            3, 3) *
                 Rj.Transpose() * qi_qj2;
       ret -=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (35 / 4 / div9);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (35.0 / 4 / div9);
 
-      tmp += 105 * 9 / 4 / div11 *
+      tmp += 105.0 * 9 / 4 / div11 *
              qi_qj.DotProduct(
                  Ri *
                  Matrix<ld>(std::vector<ld>{rai2 / 5, 0, 0, 0, rbi2 / 5, 0, 0,
@@ -1306,7 +1306,7 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                            3, 3) *
                 Rj.Transpose();
       ret -=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (105 / 2 / div9);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (105.0 / 2 / div9);
       tmp_mat = Rj *
                 Matrix<ld>(std::vector<ld>{raj2 / 5, 0, 0, 0, rbj2 / 5, 0, 0, 0,
                                            rcj2 / 5},
@@ -1317,7 +1317,7 @@ Vec3<ld> System::PVPq4thOrder(unsigned int i) const {
                            3, 3) *
                 Ri.Transpose();
       ret -=
-          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (105 / 2 / div9);
+          bodies[i].mass * bodies[j].mass * tmp_mat * qi_qj * (105.0 / 2 / div9);
 
       tmp *= bodies[i].mass * bodies[j].mass;
       ret += qi_qj * tmp;
