@@ -140,7 +140,7 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
   // i!=0: nondegenerate case
   val = n.GetElement<1>() / n_norm;
   ld Omega;
-  if (abs(i) < kEps) {
+  if (fabs(i) < kEps) {
     Omega = 0;
   } else {
     if (val > -ld(1.0) && val < ld(1.0))
@@ -161,10 +161,10 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
   //    i=0: angle between e_vec and kI
   //    i!=0: nondegenerate case
   ld omega;
-  if (abs(e) < kEps) {
+  if (fabs(e) < kEps) {
     omega = 0;
   } else {
-    if (abs(i) < kEps) {
+    if (fabs(i) < kEps) {
       omega = atan2(vec_e[1], vec_e[0]);
       if (omega < 0)
         omega += k2PI;
@@ -202,7 +202,7 @@ std::vector<ld> PosVel2OrbElements(const Vec3<ld> &pos, const Vec3<ld> &vel,
 ld SlvKeplerEq(ld M, ld e) {
   // Newton-Raphson iteration with a simple starting estimate by Danby, 1987
   ld E = M + 0.85 * e;
-  while (std::abs(M - E + e * sin(E)) > 1e-15) {
+  while (std::fabs(M - E + e * sin(E)) > 1e-15) {
     E = E - (E - e * sin(E) - M) / (1 - e * cos(E));
   }
   return E;
@@ -285,13 +285,13 @@ void RotMat2EulerAngles(Matrix<ld> R, ld &phi, ld &theta, ld &psi) {
   h = R.GetElement(3, 2);
   i = R.GetElement(3, 3);
 
-  if (std::abs(std::abs(a) - 1.0) > kEps) {
+  if (std::fabs(std::fabs(a) - 1.0) > kEps) {
     theta = acos(a);
     psi = atan2(c / sin(theta), -b / sin(theta));
     phi = atan2(g / sin(theta), d / sin(theta));
   } else {
     psi = 0.0;
-    if (std::abs(a - 1.0) < kEps) {
+    if (std::fabs(a - 1.0) < kEps) {
       theta = 0;
       phi = atan2(h, e) - psi;
     } else {
@@ -299,6 +299,22 @@ void RotMat2EulerAngles(Matrix<ld> R, ld &phi, ld &theta, ld &psi) {
       phi = psi + atan2(h, -e);
     }
   }
+/* if the rotation is zxz  
+    if (std::fabs(std::fabs(i) - 1.0) > kEps) {
+      theta = acos(i);
+      psi = atan2(g / sin(theta), h / sin(theta));
+      phi = atan2(c / sin(theta), -f / sin(theta));
+    } else {
+      psi = 0.0;
+      if (std::fabs(i - 1.0) < kEps) {
+        theta = 0;
+        phi = atan2(-b, e) - psi;
+      } else {
+        theta = kPI;
+        phi = psi + atan2(-b, -e);
+      }
+    }
+    */
 }
 
 void RotMat2EulerAngles(Matrix<ld> R, Vec3<ld> &euler_angle) {
@@ -385,11 +401,11 @@ void KeplerSlvDanby(ld dt, ld mu, Vec3<ld> &p, Vec3<ld> &v) {
     fpp = (-40.0 * alpha + mu) * c1 + u * c0;
     ld ds = -ln * f /
             (fp + copysign(1.0, fp) *
-                      sqrt(std::abs((ln - 1.0) * (ln - 1.0) * fp * fp -
+                      sqrt(std::fabs((ln - 1.0) * (ln - 1.0) * fp * fp -
                                     (ln - 1.0) * ln * f * fpp)));
     s = s + ds;
     ld fdt = f / dt;
-    if (std::abs(fdt) < kEps)
+    if (std::fabs(fdt) < kEps)
       break;
     iter++;
   }
@@ -408,7 +424,7 @@ void KeplerSlvDanby(ld dt, ld mu, Vec3<ld> &p, Vec3<ld> &v) {
 void Stumpff(ld x, ld &c0, ld &c1, ld &c2, ld &c3) {
   ld xm = 0.1;
   int k = 0;
-  while (std::abs(x) > xm) {
+  while (std::fabs(x) > xm) {
     x *= 0.25;
     k++;
   }
