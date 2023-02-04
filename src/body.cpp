@@ -184,7 +184,7 @@ void to_json(json &j, const Body &s) {
   j = json::object();
   j["name"] = s.name;
   j["mass"] = s.mass;
-  j["radius"] = s.radius * kAU / 100;
+  j["radius"] = s.radius * kAU / 1000;
   j["position"] = s.q;
   j["velocity"] = s.p / s.mass / kDaysOfYear;
   j["_p"] = s.p;
