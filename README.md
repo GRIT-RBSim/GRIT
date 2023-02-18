@@ -1,4 +1,4 @@
-![MacOS](https://github.com/GRIT-RBSim/GRIT/actions/workflows/macos.yml/badge.svg?event=push)
+<!-- ![MacOS](https://github.com/GRIT-RBSim/GRIT/actions/workflows/macos.yml/badge.svg?event=push) -->
 ![Ubuntu](https://github.com/GRIT-RBSim/GRIT/actions/workflows/ubuntu.yml/badge.svg?event=push)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![arXiv](https://img.shields.io/badge/astroph.EP-arXiv%3A2103.12767-B31B1B.svg)](https://arxiv.org/abs/2103.12767)
