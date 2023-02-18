@@ -253,6 +253,10 @@ void System::Json2OutputFormat(const json &j) {
     output_format.obliquity = j["obliquity"];
   if (j.contains("axial_tilt"))
     output_format.axial_tilt = j["axial_tilt"];
+  if (j.contains("Ftf"))
+      output_format.Ftf = j["Ftf"];
+  if (j.contains("Eheat"))
+      output_format.Eheat = j["Eheat"];
   if (j.contains("Hamiltonian"))
     output_format.Hamiltonian = j["Hamiltonian"];
   if (j.contains("momentum"))
@@ -270,6 +274,8 @@ json System::OutputFormat2Json() const {
   j["spin"] = output_format.spin;
   j["obliquity"] = output_format.obliquity;
   j["axial_tilt"] = output_format.axial_tilt;
+  j["Ftf"] = output_format.Ftf;
+  j["Eheat"] = output_format.Eheat;
   j["Hamiltonian"] = output_format.Hamiltonian;
   j["momentum"] = output_format.momentum;
   j["customize"] = output_format.customize;
@@ -507,7 +513,7 @@ void System::Simulate() {
     // Output file after 1000 steps in case it takes too much memory.
     // To store less frequently, the threshold can be set larger, but must be
     // greater than the steps in SanityCheck().
-    if (data_json.size() > 1000)
+    if (data_json.size() > 1) //GL change
       DumpDataTmp(data_json);
 
     // Once hit the save_interval set by the user. Save the current system in
@@ -1646,6 +1652,26 @@ Vec3<ld> System::GetVel(int idx) const {
   return bodies[idx].p / bodies[idx].mass;
 }
 
+Vec3<ld> System::GetFtf(int idx) const {
+  return TidalForceEquilibrium(idx, 0);
+}
+
+ld System::GetEheat(int idx) const {
+    Vec3<ld> spin1(0, 0, 0);
+    spin1 += bodies[idx].R * bodies[idx].Iinv * bodies[idx].pi;
+    Vec3<ld> vel1(0, 0, 0);
+    vel1 += bodies[idx].p / bodies[idx].mass;
+    Vec3<ld> pos1(0, 0, 0);
+    pos1 += bodies[idx].q;
+    Vec3<ld> ddot(0, 0, 0);
+    ddot=vel1-(spin1.CrossProduct(pos1));
+    Vec3<ld> F1(0, 0, 0);
+    F1 += TidalForceEquilibrium(idx, 0);
+    ld ret=ddot.DotProduct(F1);
+    
+  return ret;
+}
+
 std::ostream &System::operator>>(std::ostream &os) const {
   for (const auto &s : bodies)
     os << s;
@@ -1815,6 +1841,7 @@ Vec3<ld> System::TidalForceEquilibrium(int id_host, int id_guest) const {
                  (-9.0L * sigma * m_guest * m_guest * A * A / 2.0 / mu / r10);
 
   return F_tides;
+//    std::cout << "hahaha you are including tides\n";
 }
 
 json System::OutputDataJson() const {
@@ -1916,6 +1943,10 @@ json System::OutputDataJson() const {
         j["obliquity"] = acos(v2.DotProduct(v3N));
       if (output_format.axial_tilt)
         j["axial_tilt"] = acos(v1.DotProduct(v4));
+      if (output_format.Ftf)
+        j["Ftf"] = GetFtf(idx);
+      if (output_format.Eheat)
+        j["Eheat"] = GetEheat(idx);
       if (output_format.spin)
         j["spin"] = bodies[idx].R * bodies[idx].Iinv * bodies[idx].pi;
       if (output_format.axis)
@@ -1970,6 +2001,11 @@ void System::InitMatFile() const {
         body_files[idx] << std::setw(30) << "obliquity";
       if (output_format.axial_tilt)
         body_files[idx] << std::setw(30) << "axial_tilt";
+      if (output_format.Ftf)
+          body_files[idx] << std::setw(30)  << "Fx" << std::setw(30) << "Fy"
+                        << std::setw(30) << "Fz";
+      if (output_format.Eheat)
+            body_files[idx] << std::setw(30) << "Eheat";
     }
     body_files[idx] << std::endl;
   }
@@ -2120,6 +2156,14 @@ void System::OutputBodyData(const json &j,
         fouts[idx] << std::setw(30) << double(body_json["obliquity"]);
       if (output_format.axial_tilt)
         fouts[idx] << std::setw(30) << double(body_json["axial_tilt"]);
+      if (output_format.Ftf) {
+          auto NFtf = body_json["Ftf"];
+          for (json::iterator it = NFtf.begin(); it != NFtf.end(); it++) {
+            fouts[idx] << std::setw(30) << double(it.value());
+          }
+        }
+      if (output_format.Eheat)
+        fouts[idx] << std::setw(30) << double(body_json["Eheat"]);
     }
     fouts[idx] << std::endl;
   }
