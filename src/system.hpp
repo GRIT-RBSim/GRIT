@@ -33,6 +33,8 @@ struct OutputFormat {
   bool spin = true;
   bool obliquity = true;
   bool axial_tilt = true;
+  bool Ftf = true;
+  bool Eheat = true;
   bool Hamiltonian = true;
   bool momentum = true;
   bool customize = true;
@@ -239,6 +241,8 @@ private:
                                                            .spin = false,
                                                            .obliquity = true,
                                                            .axial_tilt = false,
+                                                           .Ftf = false,
+                                                           .Eheat = false,
                                                            .Hamiltonian = false,
                                                            .momentum = false,
                                                            .customize = false};
@@ -306,6 +310,8 @@ public:
   Vec3<ld> GetPos(int idx) const;
   // Get the velocity of the `idx`th body.
   Vec3<ld> GetVel(int idx) const;
+  Vec3<ld> GetFtf(int idx) const;
+  ld GetEheat(int idx) const;
 
   // Equations of the motion of the system: for the RK4 integrator.
   void EoM(std::vector<Vec3<ld>> &kq, std::vector<Vec3<ld>> &kp,
