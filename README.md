@@ -164,4 +164,4 @@ Released under the [Apache-2.0 License](LICENSE).
 
 N.B. If you publish the results of calculations using GRIT, please reference the package using
 
-[1] Renyi CHEN, Gongjie LI, and Molei TAO. "GRIT: a package for structure-preserving simulations of gravitationally interacting rigid-bodies." ApJ 919 50 (2021), preprint arXiv:2103.12767 [[arxiv]](https://arxiv.org/abs/2103.12767)
+[1] Renyi CHEN, Gongjie LI, and Molei TAO. "GRIT: a package for structure-preserving simulations of gravitationally interacting rigid-bodies." ApJ, 919, 50 (2021), arXiv:2103.12767 [[arxiv]](https://arxiv.org/abs/2103.12767)
