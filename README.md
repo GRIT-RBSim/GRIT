@@ -72,7 +72,7 @@ system_dir
     * ``orbital_elements``: (a, e, i, Omega, omega, Mean Anomaly) in (AU, -, rad, rad, rad, rad) with center set at the location of the central object. Instead of specify (position, velocity) as initial conditions of the system, one can specify the orbital elements as an alternative. The search order is ``orbital_elements``, then (``position``, ``velocity``).
     * ``mass``: in M_sun
     * ``time``: in year
-    * ``euler_angles``: in rad
+    * ``euler_angles``: in rad, transform from the body frame to the inertial reference frame (the input spin is set in the body frame).
     * ``angular_velocity``: in rad/year
 * ``current_time``: current time of the system.
 * ``parameters``
